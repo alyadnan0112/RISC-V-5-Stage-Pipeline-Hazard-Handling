@@ -1,0 +1,19 @@
+00500093  // [0x0000] addi x1, x0, 5             -- x1 = 5
+00a00113  // [0x0004] addi x2, x0, 10            -- x2 = 10
+002081b3  // [0x0008] add  x3, x1, x2            -- ALU forwarding test: x3 = 15
+00302023  // [0x000c] sw   x3, 0(x0)             -- store forwarding test: mem[0] = 15
+00002203  // [0x0010] lw   x4, 0(x0)             -- x4 = mem[0] = 15
+000202b3  // [0x0014] add  x5, x4, x0            -- load-use test: one stall, then x5 = 15
+00328663  // [0x0018] beq  x5, x3, BR_TARGET     -- taken branch; flushes the next two instructions
+06f00313  // [0x001c] addi x6, x0, 111           -- WRONG PATH: final x6 = 0
+0de00393  // [0x0020] addi x7, x0, 222           -- WRONG PATH: final x7 = 0
+1bc00513  // [0x0024] BR_TARGET: addi x10, x0, 444 -- branch target; x10 = 444
+0080046f  // [0x0028] jal  x8, J_TARGET         -- jump flush test; x8 = 0x002c
+14d00493  // [0x002c] WRONG PATH: addi x9, x0, 333 -- final x9 = 0
+30900513  // [0x0030] J_TARGET: addi x10, x0, 777 -- jump target; final x10 = 777
+00000063  // [0x0034] SELF: beq  x0, x0, SELF    -- infinite self-branch; acts as HALT
+
+// Expected final state after the program reaches SELF:
+// Registers: x0=0, x1=5, x2=10, x3=15, x4=15, x5=15, x6=0, x7=0,
+//            x8=0x002c (44), x9=0, x10=777
+// Data memory: mem[0]=15
